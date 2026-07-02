@@ -17,7 +17,7 @@ export default function ControlLayout({
 
   useEffect(() => {
     const checkDisputes = () => {
-      const activeDisputes = db.escrowLedgers.filter(e => e.status === 'disputed');
+      const activeDisputes = db.escrowTransactions.filter((e) => e.status === 'disputed');
       setDisputedCount(activeDisputes.length);
     };
 

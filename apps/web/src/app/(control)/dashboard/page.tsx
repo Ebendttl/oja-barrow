@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { Shield, Users, CreditCard, Sparkles, Scale, CheckCircle2, XCircle, ArrowUpRight, BarChart3, AlertCircle } from "lucide-react";
-import { db, Order, EscrowLedger, PayoutRequest, Vendor, User, Product } from "@oja-barrow/database";
+import { db, Order, EscrowTransaction, PayoutRequest, Vendor, User, Product } from "@oja-barrow/database";
 import { Button } from "@oja-barrow/ui";
 
 export default function ControlDashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [escrows, setEscrows] = useState<EscrowLedger[]>([]);
+  const [escrows, setEscrows] = useState<EscrowTransaction[]>([]);
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -15,7 +15,7 @@ export default function ControlDashboardPage() {
 
   const loadOpsData = () => {
     setOrders(db.orders);
-    setEscrows(db.escrowLedgers);
+    setEscrows(db.escrowTransactions);
     setPayouts(db.payoutRequests);
     setVendors(db.vendors);
     setUsers(db.users);
@@ -29,17 +29,17 @@ export default function ControlDashboardPage() {
   }, []);
 
   // Global KPIs
-  const totalVolume = escrows.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalVolume = escrows.reduce((acc, curr) => acc + curr.held_amount, 0);
   const currentEscrowPool = escrows
     .filter(e => e.status === 'held' || e.status === 'disputed')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+    .reduce((acc, curr) => acc + curr.held_amount, 0);
   const pendingPayouts = payouts.filter(p => p.status === 'pending');
   const activeDisputes = escrows.filter(e => e.status === 'disputed');
 
   // Admin Dispute Actions
   const handleAdminRelease = (orderId: string) => {
     try {
-      db.releaseEscrow(orderId);
+      db.confirmDelivery(orderId);
       loadOpsData();
     } catch (err) {
       console.error(err);
@@ -57,15 +57,15 @@ export default function ControlDashboardPage() {
       }
 
       // Modify escrow status to refunded
-      const currentEscrows = db.escrowLedgers;
-      const eIdx = currentEscrows.findIndex(e => e.order_id === orderId);
+      const currentEscrows = db.escrowTransactions;
+      const eIdx = currentEscrows.findIndex((e) => e.order_id === orderId);
       if (eIdx !== -1) {
         currentEscrows[eIdx].status = 'refunded';
-        db.escrowLedgers = currentEscrows;
+        db.escrowTransactions = currentEscrows;
 
         // Refund buyer wallet
         const buyerId = currentOrders[oIdx].buyer_id;
-        const refundAmt = currentEscrows[eIdx].amount;
+        const refundAmt = currentEscrows[eIdx].held_amount;
         const currentWallets = db.wallets;
         
         // Return to buyer wallet if they have one, or simulate credit
@@ -161,7 +161,9 @@ export default function ControlDashboardPage() {
           <div className="space-y-4">
             {activeDisputes.map(escrow => {
               const order = orders.find(o => o.id === escrow.order_id);
-              const prod = order ? products.find(p => p.id === order.product_id) : null;
+              const orderItems = db.orderItems.filter(oi => oi.order_id === escrow.order_id);
+              const firstItem = orderItems[0];
+              const prod = order && firstItem ? products.find(p => p.id === firstItem.product_id) : null;
               const vend = order ? vendors.find(v => v.id === order.vendor_id) : null;
               const buyer = order ? users.find(u => u.id === order.buyer_id) : null;
 
@@ -179,7 +181,7 @@ export default function ControlDashboardPage() {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-400">
                       <p>Buyer: <span className="text-slate-200 font-bold">{buyer?.full_name}</span></p>
                       <p>Vendor: <span className="text-slate-200 font-bold">{vend?.store_name}</span></p>
-                      <p className="col-span-2 mt-1">Dispute Amount: <span className="text-brand-sunflower font-black">₦{escrow.amount.toLocaleString()}</span></p>
+                      <p className="col-span-2 mt-1">Dispute Amount: <span className="text-brand-sunflower font-black">₦{escrow.held_amount.toLocaleString()}</span></p>
                     </div>
                   </div>
 

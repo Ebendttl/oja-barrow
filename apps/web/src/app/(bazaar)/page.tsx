@@ -47,7 +47,7 @@ export default function BazaarHomepage() {
       })
     : products;
 
-  const haggleFriendlyProducts = products.filter(p => p.haggle_enabled);
+  const haggleFriendlyProducts = filteredProducts.filter(p => p.haggle_enabled);
 
   return (
     <div className="space-y-10">
@@ -151,74 +151,76 @@ export default function BazaarHomepage() {
       </section>
 
       {/* 3. Haggle-Friendly Deals Shelf (Surfaced Differentiator) */}
-      <section className="space-y-4 bg-brand-sunflower/10 border-2 border-dashed border-brand-sunflower/45 rounded-3xl p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h2 className="text-xl md:text-2xl font-extrabold font-display flex items-center gap-1.5 text-brand-indigo">
-              🤝 Haggle-Friendly Deals
-            </h2>
-            <p className="text-xs font-semibold text-brand-indigo/70">
-              Don&apos;t pay full price! Tap &quot;Make Offer&quot; to strike a deal with the vendor in under 5 rounds.
-            </p>
+      {haggleFriendlyProducts.length > 0 && (
+        <section className="space-y-4 bg-brand-sunflower/10 border-2 border-dashed border-brand-sunflower/45 rounded-3xl p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h2 className="text-xl md:text-2xl font-extrabold font-display flex items-center gap-1.5 text-brand-indigo">
+                🤝 Haggle-Friendly Deals
+              </h2>
+              <p className="text-xs font-semibold text-brand-indigo/70">
+                Don&apos;t pay full price! Tap &quot;Make Offer&quot; to strike a deal with the vendor in under 5 rounds.
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {haggleFriendlyProducts.map(product => {
-            const vendor = vendors.find(v => v.id === product.vendor_id);
-            return (
-              <div
-                key={product.id}
-                className="group relative bg-white border border-brand-border rounded-2xl overflow-hidden hover:border-brand-coral hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-              >
-                {/* Product Image */}
-                <div className="relative aspect-video w-full bg-brand-neutral overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={product.images?.[0] || "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&auto=format&fit=crop&q=80"}
-                    alt={product.name}
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 bg-brand-coral text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> Haggle Mode
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {haggleFriendlyProducts.map(product => {
+              const vendor = vendors.find(v => v.id === product.vendor_id);
+              return (
+                <div
+                  key={product.id}
+                  className="group relative bg-white border border-brand-border rounded-2xl overflow-hidden hover:border-brand-coral hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+                >
+                  {/* Product Image */}
+                  <div className="relative aspect-video w-full bg-brand-neutral overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.images?.[0] || "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600&auto=format&fit=crop&q=80"}
+                      alt={product.name}
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-brand-coral text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
+                      <MessageSquare className="h-3.5 w-3.5" /> Haggle Mode
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-brand-indigo/60">
+                        <Store className="h-3.5 w-3.5 text-brand-coral" />
+                        <span>{vendor?.store_name || "Verified Stall"}</span>
+                      </div>
+                      <h3 className="font-extrabold text-base leading-snug group-hover:text-brand-coral transition-colors line-clamp-1">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-brand-indigo/70 line-clamp-2 leading-relaxed">
+                        {product.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-brand-neutral">
+                      <div>
+                        <span className="text-[10px] uppercase font-black text-brand-indigo/50 block">Start Price</span>
+                        <span className="text-lg font-black font-display text-brand-indigo">
+                          ₦{product.price.toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <Link href={`/product/${product.slug}`}>
+                        <Button variant="secondary" size="sm" className="font-black text-xs hover:scale-105 transition-all">
+                          Make an Offer 🤝
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
-
-                {/* Details */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-brand-indigo/60">
-                      <Store className="h-3.5 w-3.5 text-brand-coral" />
-                      <span>{vendor?.store_name || "Verified Stall"}</span>
-                    </div>
-                    <h3 className="font-extrabold text-base leading-snug group-hover:text-brand-coral transition-colors line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-xs text-brand-indigo/70 line-clamp-2 leading-relaxed">
-                      {product.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-brand-neutral">
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-brand-indigo/50 block">Start Price</span>
-                      <span className="text-lg font-black font-display text-brand-indigo">
-                        ₦{product.price.toLocaleString()}
-                      </span>
-                    </div>
-                    
-                    <Link href={`/product/${product.slug}`}>
-                      <Button variant="secondary" size="sm" className="font-black text-xs hover:scale-105 transition-all">
-                        Make an Offer 🤝
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* 4. Trending Stalls (Vendors) */}
       <section className="space-y-4">

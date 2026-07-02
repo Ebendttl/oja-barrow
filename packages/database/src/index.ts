@@ -413,6 +413,55 @@ const INITIAL_PRODUCTS: Product[] = [
 
 // Helper to interact with the database store
 class LocalStorageDB {
+  constructor() {
+    this.syncDatabase();
+  }
+
+  private syncDatabase() {
+    if (typeof window === 'undefined') return;
+
+    const storedProductsRaw = localStorage.getItem('oja_products');
+    const storedCategoriesRaw = localStorage.getItem('oja_categories');
+    let forceReset = false;
+
+    if (storedProductsRaw) {
+      try {
+        const storedProducts = JSON.parse(storedProductsRaw) as Product[];
+        const hasRelativePath = storedProducts.some(p => 
+          p.images?.some(img => img.startsWith('/images/'))
+        );
+        const hasStaleData = storedProducts.some(p => {
+          const defaultProd = INITIAL_PRODUCTS.find(dp => dp.id === p.id);
+          return defaultProd && (
+            p.category_id !== defaultProd.category_id || 
+            p.name !== defaultProd.name || 
+            p.slug !== defaultProd.slug
+          );
+        });
+
+        if (hasRelativePath || hasStaleData) {
+          forceReset = true;
+        }
+      } catch (e) {
+        forceReset = true;
+      }
+    }
+
+    if (!storedProductsRaw || !storedCategoriesRaw || forceReset) {
+      localStorage.setItem('oja_products', JSON.stringify(INITIAL_PRODUCTS));
+      localStorage.setItem('oja_categories', JSON.stringify(INITIAL_CATEGORIES));
+      localStorage.setItem('oja_vendors', JSON.stringify(INITIAL_VENDORS));
+      const defaultWallets = INITIAL_VENDORS.map(v => ({
+        id: `w-${v.id}`,
+        vendor_id: v.id,
+        available_balance: 0.0,
+        pending_balance: 0.0,
+        created_at: new Date().toISOString()
+      }));
+      localStorage.setItem('oja_wallets', JSON.stringify(defaultWallets));
+    }
+  }
+
   private getStore(key: string, initial: any): any[] {
     if (typeof window === 'undefined') return initial;
     const data = localStorage.getItem(`oja_${key}`);

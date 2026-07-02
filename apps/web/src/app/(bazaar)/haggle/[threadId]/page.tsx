@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/navigation";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Send, Sparkles, AlertCircle, ShoppingCart, Ban, CheckCircle2, RefreshCw } from "lucide-react";
 import { db, HaggleThread, HaggleOffer, Product, Vendor } from "@oja-barrow/database";

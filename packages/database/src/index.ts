@@ -351,7 +351,7 @@ const INITIAL_PRODUCTS: Product[] = [
     floor_price: 780000.00,
     stock: 3,
     created_at: new Date().toISOString(),
-    images: ['https://images.unsplash.com/photo-1632661676136-6827481d3319?w=600&auto=format&fit=crop&q=80'],
+    images: ['https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=600&auto=format&fit=crop&q=80'],
   },
   {
     id: 'a0000000-0000-0000-0000-000000000002',
@@ -435,7 +435,8 @@ class LocalStorageDB {
           return defaultProd && (
             p.category_id !== defaultProd.category_id || 
             p.name !== defaultProd.name || 
-            p.slug !== defaultProd.slug
+            p.slug !== defaultProd.slug ||
+            JSON.stringify(p.images) !== JSON.stringify(defaultProd.images)
           );
         });
 

@@ -51,7 +51,9 @@ export default function CartPage() {
   };
 
   const subtotal = cartItems.reduce((acc, item) => {
-    return acc + (item.price * item.quantity);
+    const prod = getProductDetails(item.product_id);
+    const price = item.agreed_price !== null && item.agreed_price !== undefined ? item.agreed_price : (prod ? prod.price : 0);
+    return acc + (price * item.quantity);
   }, 0);
 
   const deliveryFee = cartItems.length > 0 ? 2500 : 0; // Flat Lagos rate
@@ -70,8 +72,8 @@ export default function CartPage() {
       // Step 2: Split Orders by Vendor and process via Database Client
       setTimeout(() => {
         try {
-          const orderIds = db.checkout(deliveryAddress);
-          setCreatedOrderIds(orderIds);
+          const buyerId = '11111111-1111-1111-1111-111111111111';
+          db.checkout(buyerId, deliveryAddress);
           setPayoutStep(3);
           
           // Clear cart on success
@@ -125,7 +127,7 @@ export default function CartPage() {
             {cartItems.map(item => {
               const prod = getProductDetails(item.product_id);
               const vendor = prod ? getVendorDetails(prod.vendor_id) : null;
-              const isHaggled = item.is_haggle;
+              const isHaggled = item.agreed_price !== null;
 
               return (
                 <div key={item.id} className="bg-white border border-brand-border rounded-2xl p-4 shadow-sm flex gap-4 relative overflow-hidden">
@@ -159,7 +161,7 @@ export default function CartPage() {
                     <div className="flex items-end justify-between mt-2">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-black text-brand-indigo">
-                          ₦{item.price.toLocaleString()}
+                          ₦{(item.agreed_price !== null && item.agreed_price !== undefined ? item.agreed_price : (prod ? prod.price : 0)).toLocaleString()}
                         </span>
                         {isHaggled && prod && (
                           <span className="text-xs text-brand-indigo/40 line-through">

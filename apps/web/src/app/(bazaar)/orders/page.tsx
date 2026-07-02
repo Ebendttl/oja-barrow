@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Package, ShieldCheck, CheckCircle2, ShieldAlert, ArrowRight, Truck, RefreshCw } from "lucide-react";
-import { db, Order, Product, Vendor, EscrowLedger } from "@oja-barrow/database";
+import { db, Order, Product, Vendor, EscrowTransaction } from "@oja-barrow/database";
 import { Button } from "@oja-barrow/ui";
 
 export default function OrdersPage() {
@@ -12,14 +12,14 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [escrows, setEscrows] = useState<EscrowLedger[]>([]);
+  const [escrows, setEscrows] = useState<EscrowTransaction[]>([]);
   
   const loadOrders = () => {
     const buyerOrders = db.orders.filter(o => o.buyer_id === buyerId);
     setOrders(buyerOrders.reverse()); // latest first
     setProducts(db.products);
     setVendors(db.vendors);
-    setEscrows(db.escrowLedgers);
+    setEscrows(db.escrowTransactions);
   };
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function OrdersPage() {
 
   const handleConfirmDelivery = (orderId: string) => {
     try {
-      db.releaseEscrow(orderId);
+      db.confirmDelivery(orderId);
       loadOrders();
     } catch (err) {
       console.error(err);
@@ -72,7 +72,9 @@ export default function OrdersPage() {
       ) : (
         <div className="space-y-6">
           {orders.map(order => {
-            const product = products.find(p => p.id === order.product_id);
+            const orderItems = db.orderItems.filter(oi => oi.order_id === order.id);
+            const firstItem = orderItems[0];
+            const product = products.find(p => p.id === firstItem?.product_id);
             const vendor = vendors.find(v => v.id === order.vendor_id);
             const escrow = escrows.find(e => e.order_id === order.id);
 

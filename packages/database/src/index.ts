@@ -85,7 +85,7 @@ export interface Order {
   checkout_id: string;
   buyer_id: string;
   vendor_id: string;
-  status: 'pending_payment' | 'paid' | 'packed' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
+  status: 'pending_payment' | 'paid' | 'packed' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'disputed';
   shipping_address: any;
   total_amount: number;
   commission_amount: number;
@@ -778,6 +778,28 @@ class LocalStorageDB {
 
       this.escrowTransactions = escrows;
       this.logAudit('ESCROW_RELEASED', 'escrow_transactions', escrow.id, { status: 'held' }, { status: 'released' });
+    }
+  }
+
+  // Buyer raises dispute
+  disputeEscrow(orderId: string) {
+    const orders = this.orders;
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) throw new Error('Order not found');
+
+    const order = orders[orderIndex];
+    order.status = 'disputed';
+    orders[orderIndex] = order;
+    this.orders = orders;
+
+    // Update escrow transaction
+    const escrows = this.escrowTransactions;
+    const escrowIdx = escrows.findIndex(e => e.order_id === orderId && e.status === 'held');
+    if (escrowIdx !== -1) {
+      const escrow = escrows[escrowIdx];
+      escrow.status = 'disputed';
+      this.escrowTransactions = escrows;
+      this.logAudit('ESCROW_DISPUTED', 'escrow_transactions', escrow.id, { status: 'held' }, { status: 'disputed' });
     }
   }
 

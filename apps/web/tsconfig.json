@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@oja-barrow/database": ["../../packages/database/src/index.ts"],
+      "@oja-barrow/ui": ["../../packages/ui/src/index.ts"],
+      "@oja-barrow/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [
